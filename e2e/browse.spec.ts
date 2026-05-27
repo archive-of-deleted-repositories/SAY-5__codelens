@@ -14,4 +14,7 @@ test("find references for a method", async ({ page }) => {
   await expect(page.getByText(/calc\/calc\.go:\d+:\d+/).first()).toBeVisible();
   // The references heading shows a count and at least one ref row appears.
   await expect(page.getByRole("heading", { name: /references/ })).toBeVisible();
+
+  // The semantic layer surfaces related symbols ranked by the provider.
+  await expect(page.getByRole("heading", { name: "related symbols" })).toBeVisible();
 });

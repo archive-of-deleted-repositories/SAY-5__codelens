@@ -1,16 +1,20 @@
 import { useCallback, useState } from "react";
 import {
   findReferences,
+  findRelated,
   lookupSymbol,
   type Ref,
+  type Related,
   type Symbol,
 } from "./api";
+import { RelatedPanel } from "./components/RelatedPanel";
 import { SymbolPanel } from "./components/SymbolPanel";
 
 export function App() {
   const [name, setName] = useState("Add");
   const [symbol, setSymbol] = useState<Symbol | null>(null);
   const [refs, setRefs] = useState<Ref[]>([]);
+  const [related, setRelated] = useState<Related[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -22,12 +26,17 @@ export function App() {
       if (!found) {
         setSymbol(null);
         setRefs([]);
+        setRelated([]);
         setError(`no symbol named "${lookup}"`);
         return;
       }
       setSymbol(found);
-      const { references } = await findReferences(found.id);
+      const [{ references }, { related: rel }] = await Promise.all([
+        findReferences(found.id),
+        findRelated(found.id, 5),
+      ]);
       setRefs(references);
+      setRelated(rel);
     } catch (e) {
       setError(e instanceof Error ? e.message : "request failed");
     } finally {
@@ -61,6 +70,7 @@ export function App() {
       </form>
       {error && <p className="error">{error}</p>}
       {symbol && <SymbolPanel symbol={symbol} refs={refs} />}
+      {symbol && <RelatedPanel related={related} />}
     </main>
   );
 }
