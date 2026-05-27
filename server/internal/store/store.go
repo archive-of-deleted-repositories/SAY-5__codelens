@@ -200,3 +200,15 @@ func (s *Store) FilePath(ctx context.Context, fileID int64) (string, error) {
 	err := s.pool.QueryRow(ctx, `SELECT path FROM files WHERE id = $1`, fileID).Scan(&p)
 	return p, err
 }
+
+// FileByID returns the full file record for an id.
+func (s *Store) FileByID(ctx context.Context, fileID int64) (*File, error) {
+	var f File
+	err := s.pool.QueryRow(ctx,
+		`SELECT id, path, package, lines FROM files WHERE id = $1`, fileID).
+		Scan(&f.ID, &f.Path, &f.Package, &f.Lines)
+	if err != nil {
+		return nil, err
+	}
+	return &f, nil
+}

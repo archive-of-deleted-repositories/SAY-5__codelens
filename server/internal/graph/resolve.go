@@ -145,11 +145,11 @@ func (r *Resolver) resolveRefFile(p graphql.ResolveParams) (any, error) {
 }
 
 func (r *Resolver) fileByID(p graphql.ResolveParams, fileID int64) (any, error) {
-	path, err := r.Store.FilePath(ctxOf(p), fileID)
+	f, err := r.Store.FileByID(ctxOf(p), fileID)
 	if err != nil {
 		return nil, err
 	}
-	return store.File{ID: fileID, Path: path}, nil
+	return *f, nil
 }
 
 // transitive runs a bounded BFS over the call graph, deduping visited symbols
