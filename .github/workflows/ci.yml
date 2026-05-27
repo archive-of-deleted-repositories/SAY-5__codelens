@@ -1,0 +1,132 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint-go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+      - uses: golangci/golangci-lint-action@v7
+        with:
+          version: v2.5.0
+          working-directory: server
+
+  test-go:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: codelens
+          POSTGRES_PASSWORD: codelens
+          POSTGRES_DB: codelens
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U codelens"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgres://codelens:codelens@localhost:5432/codelens?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+      - name: test
+        working-directory: server
+        run: go test -coverprofile=cover.out ./...
+
+  lint-py:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: install
+        working-directory: sidecar
+        run: pip install ".[dev]"
+      - name: ruff
+        working-directory: sidecar
+        run: ruff check .
+
+  test-py:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: install
+        working-directory: sidecar
+        run: pip install ".[dev]"
+      - name: pytest
+        working-directory: sidecar
+        run: pytest -q
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install
+      - name: lint
+        run: npm run lint
+      - name: typecheck
+        run: npm run typecheck
+      - name: test
+        run: npm run test
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: bring up stack
+        run: docker compose up -d --build
+      - name: wait for api
+        run: |
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:8080/healthz; then echo ready; break; fi
+            sleep 2
+          done
+      - name: install playwright
+        working-directory: e2e
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
+      - name: run e2e
+        working-directory: e2e
+        run: npx playwright test
+      - name: stack logs on failure
+        if: failure()
+        run: docker compose logs
+
+  build-images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: build server image
+        run: docker build -f server/Dockerfile --target api -t codelens-api .
+      - name: build indexer image
+        run: docker build -f server/Dockerfile --target indexer -t codelens-indexer .
+      - name: build sidecar image
+        run: docker build -t codelens-sidecar ./sidecar
+      - name: build web image
+        run: docker build -t codelens-web ./web
