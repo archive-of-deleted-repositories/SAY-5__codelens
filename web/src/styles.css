@@ -1,0 +1,110 @@
+:root {
+  color-scheme: light dark;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+body {
+  margin: 0;
+  background: #0f1115;
+  color: #d7dae0;
+}
+
+.app {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+h1 {
+  font-size: 1.4rem;
+  letter-spacing: 0.04em;
+}
+
+.lede {
+  color: #8b929e;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.search {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.search input {
+  flex: 1;
+  padding: 0.5rem 0.7rem;
+  background: #1a1d24;
+  border: 1px solid #2a2f3a;
+  border-radius: 6px;
+  color: inherit;
+  font: inherit;
+}
+
+.search button {
+  padding: 0.5rem 1rem;
+  background: #2d6cdf;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font: inherit;
+  cursor: pointer;
+}
+
+.search button:disabled {
+  opacity: 0.6;
+}
+
+.error {
+  color: #e06c75;
+}
+
+.panel {
+  border: 1px solid #2a2f3a;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.def {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.kind {
+  background: #2a2f3a;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.sym-name {
+  font-weight: 600;
+}
+
+.loc,
+.refs code {
+  color: #8b929e;
+  font-size: 0.85rem;
+}
+
+.count {
+  color: #98c379;
+}
+
+.refs {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+}
+
+.refs li {
+  padding: 0.2rem 0;
+}
+
+.empty {
+  color: #8b929e;
+}
