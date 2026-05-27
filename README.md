@@ -54,6 +54,43 @@ cd sidecar && pip install ".[dev]" && pytest
 cd web && npm install && npm run test
 ```
 
+## find-references latency
+
+The find-references path is the one that gets hit constantly while browsing, so
+it is the path that was optimized. The numbers below are p95 over the seeded
+benchmark in `server/cmd/bench`, measured on the development machine. Reproduce
+them with:
+
+```sh
+cd server
+go run ./cmd/bench -dbdir ../db -files 6000 -symbols 6000 -refs 900 -iters 200
+```
+
+Seeded graph: 6000 files, 6000 symbols, 900 references per symbol (about 5.4M
+reference rows).
+
+| path | p50 | p95 |
+| --- | --- | --- |
+| slow baseline (no index, N+1 file lookups) | 411.0 ms | 483.6 ms |
+| optimized (covering index, single join) | 4.3 ms | 6.8 ms |
+
+What made it fast:
+
+- The baseline scanned the whole `refs` table for a symbol, then issued one
+  extra `files` query per matching row (a textbook N+1). The optimized query is
+  a single `refs JOIN files` that returns the file path inline, so there is one
+  round trip instead of hundreds.
+- A composite index on `refs (symbol_id, file_id)` with `INCLUDE (ref_line,
+  ref_col)` lets Postgres seek to a symbol's rows and answer from the index
+  without heap fetches. See `db/indexes.sql`.
+- Hot symbols are cached in Redis behind the API, so repeat lookups skip the
+  database entirely. The cache is optional; the table above is measured without
+  it to isolate the database win.
+
+CI runs a `bench-regress` smoke gate (`server/scripts/benchregress.sh`) on a
+smaller seeded graph and fails if the fast path drifts to within 30% of the slow
+baseline, guarding against a lost index or a reintroduced N+1.
+
 ## How this differs
 
 This repo is the code-intelligence and symbol-graph tool in the set. It is not
