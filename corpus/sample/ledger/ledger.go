@@ -33,3 +33,30 @@ func Report(entries []Entry) string {
 	}
 	return "unbalanced"
 }
+
+// Audit calls Report, which calls Balance: a two level call chain used to
+// exercise transitive callee traversal.
+func Audit(entries []Entry) string {
+	return Report(entries)
+}
+
+// isEven and isOdd are mutually recursive, forming a cycle in the call graph
+// that the bounded traversal must handle without looping forever.
+func isEven(n int) bool {
+	if n == 0 {
+		return true
+	}
+	return isOdd(n - 1)
+}
+
+func isOdd(n int) bool {
+	if n == 0 {
+		return false
+	}
+	return isEven(n - 1)
+}
+
+// Parity reports whether the entry count is even, driving the mutual recursion.
+func Parity(entries []Entry) bool {
+	return isEven(len(entries))
+}
