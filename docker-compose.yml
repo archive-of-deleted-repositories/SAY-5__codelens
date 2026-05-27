@@ -1,0 +1,73 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: codelens
+      POSTGRES_PASSWORD: codelens
+      POSTGRES_DB: codelens
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U codelens"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  indexer:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+      target: indexer
+    environment:
+      DATABASE_URL: postgres://codelens:codelens@postgres:5432/codelens?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["-root", "corpus/sample", "-schema", "db/schema.sql"]
+
+  api:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+      target: api
+    environment:
+      DATABASE_URL: postgres://codelens:codelens@postgres:5432/codelens?sslmode=disable
+      REDIS_ADDR: redis:6379
+      SIDECAR_URL: http://sidecar:8000
+      FAST_PATH: "true"
+      API_ADDR: ":8080"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      indexer:
+        condition: service_completed_successfully
+
+  sidecar:
+    build:
+      context: ./sidecar
+    environment:
+      SEMANTIC_PROVIDER: fake
+    ports:
+      - "8000:8000"
+
+  web:
+    build:
+      context: ./web
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
