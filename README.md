@@ -63,16 +63,16 @@ them with:
 
 ```sh
 cd server
-go run ./cmd/bench -dbdir ../db -files 6000 -symbols 6000 -refs 900 -iters 200
+go run ./cmd/bench -dbdir ../db -files 8000 -symbols 5000 -refs 2000 -iters 150
 ```
 
-Seeded graph: 6000 files, 6000 symbols, 900 references per symbol (about 5.4M
+Seeded graph: 8000 files, 5000 symbols, 2000 references per symbol (about 10M
 reference rows).
 
 | path | p50 | p95 |
 | --- | --- | --- |
-| slow baseline (no index, N+1 file lookups) | 411.0 ms | 483.6 ms |
-| optimized (covering index, single join) | 4.3 ms | 6.8 ms |
+| slow baseline (no index, N+1 file lookups) | 838.6 ms | 915.3 ms |
+| optimized (covering index, single join) | 9.2 ms | 17.6 ms |
 
 What made it fast:
 
