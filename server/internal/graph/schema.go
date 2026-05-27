@@ -53,13 +53,13 @@ func NewSchema(r *Resolver) (graphql.Schema, error) {
 	symbolType := graphql.NewObject(graphql.ObjectConfig{
 		Name: "Symbol",
 		Fields: graphql.Fields{
-			"id":      &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
-			"name":    &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-			"kind":    &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-			"defLine": &graphql.Field{Type: graphql.NewNonNull(graphql.Int), Resolve: field("DefLine")},
-			"defCol":  &graphql.Field{Type: graphql.NewNonNull(graphql.Int), Resolve: field("DefCol")},
+			"id":       &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
+			"name":     &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+			"kind":     &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+			"defLine":  &graphql.Field{Type: graphql.NewNonNull(graphql.Int), Resolve: field("DefLine")},
+			"defCol":   &graphql.Field{Type: graphql.NewNonNull(graphql.Int), Resolve: field("DefCol")},
 			"receiver": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-			"file": &graphql.Field{Type: graphql.NewNonNull(fileType), Resolve: r.resolveSymbolFile},
+			"file":     &graphql.Field{Type: graphql.NewNonNull(fileType), Resolve: r.resolveSymbolFile},
 		},
 	})
 
@@ -69,7 +69,7 @@ func NewSchema(r *Resolver) (graphql.Schema, error) {
 			"id":      &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
 			"refLine": &graphql.Field{Type: graphql.NewNonNull(graphql.Int), Resolve: field("RefLine")},
 			"refCol":  &graphql.Field{Type: graphql.NewNonNull(graphql.Int), Resolve: field("RefCol")},
-			"file": &graphql.Field{Type: graphql.NewNonNull(fileType), Resolve: r.resolveRefFile},
+			"file":    &graphql.Field{Type: graphql.NewNonNull(fileType), Resolve: r.resolveRefFile},
 		},
 	})
 

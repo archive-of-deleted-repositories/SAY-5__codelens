@@ -92,9 +92,9 @@ func Parse(root string) (*Graph, error) {
 	sort.Strings(goFiles)
 
 	type fileAST struct {
-		path string
-		rel  string
-		f    *ast.File
+		path  string
+		rel   string
+		f     *ast.File
 		lines int
 	}
 	var parsed []fileAST
